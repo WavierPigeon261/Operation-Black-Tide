@@ -11,103 +11,62 @@ const down = new THREE.Vector3(0, -1, 0);
 
 const textureLoader = new THREE.TextureLoader();
 
-const islandTexture = textureLoader.load(
-    "/models/island1.png",
-    () => console.log("Island texture loaded")
-);
-
-const shoreTexture = textureLoader.load(
-    "/models/shorewaves1.png",
-    () => console.log("Shore texture loaded")
-);
-
-const waterTexture = textureLoader.load(
-    "/models/water.png",
-    () => console.log("Water texture loaded")
-);
-
 const islandTexture = textureLoader.load("/models/island1.png");
 const shoreTexture = textureLoader.load("/models/shorewaves1.png");
-const waterTexture = textureLoader.load("/models/water.png");
+const normalTexture = textureLoader.load("/models/island1_n1.png");
+
+islandTexture.flipY = false;
+shoreTexture.flipY = false;
+normalTexture.flipY = false;
+
+normalTexture.colorSpace = THREE.NoColorSpace;
+
 
 let island;
 
 loader.load("/models/island.glb", (gltf) => {
     island = gltf.scene;
 
-    const textureLoader = new THREE.TextureLoader();
-
-    const islandTexture = textureLoader.load(
-        "/models/island1.png"
-    );
-
-    const shoreTexture = textureLoader.load(
-        "/models/shorewaves1.png"
-    );
-
-    const waterTexture = textureLoader.load(
-        "/models/water.png"
-    );
-
-    islandTexture.flipY = false;
-    shoreTexture.flipY = false;
-    waterTexture.flipY = false;
-
-    islandTexture.colorSpace = THREE.SRGBColorSpace;
-    shoreTexture.colorSpace = THREE.SRGBColorSpace;
-    waterTexture.colorSpace = THREE.SRGBColorSpace;
+    island.traverse((child) => {
+    if (child.isMesh) {
+        console.log(
+            "mesh:", child.name,
+            "material:", child.material.name
+        );
+    }
+});
 
     island.traverse((child) => {
-        if (!child.isMesh) return;
+    if (!child.isMesh || !child.material) {
+        return;
+    }
 
-        console.log(
-            child.name,
-            child.material.name
-        );
+    console.log(
+        "mesh:",
+        child.name,
+        "material:",
+        child.material.name
+    );
 
-        if (child.material.name === "island1 midpoly") {
-            child.material.map = islandTexture;
-        }
+    if (child.material.name === "island1 midpoly") {
+        child.material.map = islandTexture;
+        child.material.normalMap = normalTexture;
+    }
 
-        if (child.material.name === "shorewaves") {
-            child.material.map = shoreTexture;
-        }
+    if (child.material.name === "shorewaves") {
+        child.material.map = shoreTexture;
+    }
 
-        if (child.material.name === "water") {
-            child.material.map = waterTexture;
-        }
-
-        child.material.needsUpdate = true;
-    });
+    child.material.needsUpdate = true;
+});
 
     scene.add(island);
 
-    console.log(island);
+    islandBox = new THREE.Box3().setFromObject(island);
 });
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-
-loader.load("/models/island.glb", (gltf) => {
-
-    const island = gltf.scene;
-
-    island.position.set(0, 0, 0);
-    island.scale.set(1, 1, 1);
-
-    scene.add(island);
-
-islandBox = new THREE.Box3().setFromObject(island);
-
-const helper = new THREE.Box3Helper(
-    islandBox,
-    0xff0000
-);
-
-scene.add(helper);
-
-console.log(island);
-});
 
 const collisionGeometry = new THREE.BoxGeometry(
     200, // width
