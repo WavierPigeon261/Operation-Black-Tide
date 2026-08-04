@@ -12,53 +12,24 @@ const down = new THREE.Vector3(0, -1, 0);
 const textureLoader = new THREE.TextureLoader();
 
 const islandTexture = textureLoader.load("/models/island1.png");
-const shoreTexture = textureLoader.load("/models/shorewaves1.png");
 const normalTexture = textureLoader.load("/models/island1_n1.png");
 
 islandTexture.flipY = false;
-shoreTexture.flipY = false;
 normalTexture.flipY = false;
 
+
+islandTexture.wrapS = THREE.ClampToEdgeWrapping;
+islandTexture.wrapT = THREE.ClampToEdgeWrapping;
+islandTexture.repeat.set(1, 1);
+
+islandTexture.colorSpace = THREE.SRGBColorSpace;
 normalTexture.colorSpace = THREE.NoColorSpace;
 
 
 let island;
 
-loader.load("/models/island.glb", (gltf) => {
+loader.load("/models/island_fixed1.glb", (gltf) => {
     island = gltf.scene;
-
-    island.traverse((child) => {
-    if (child.isMesh) {
-        console.log(
-            "mesh:", child.name,
-            "material:", child.material.name
-        );
-    }
-});
-
-    island.traverse((child) => {
-    if (!child.isMesh || !child.material) {
-        return;
-    }
-
-    console.log(
-        "mesh:",
-        child.name,
-        "material:",
-        child.material.name
-    );
-
-    if (child.material.name === "island1 midpoly") {
-        child.material.map = islandTexture;
-        child.material.normalMap = normalTexture;
-    }
-
-    if (child.material.name === "shorewaves") {
-        child.material.map = shoreTexture;
-    }
-
-    child.material.needsUpdate = true;
-});
 
     scene.add(island);
 
@@ -73,6 +44,26 @@ const collisionGeometry = new THREE.BoxGeometry(
     10,  // height
     200  // depth
 );
+
+const waterGeometry = new THREE.PlaneGeometry(2000, 2000);
+
+const waterMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1e5aa8,
+    transparent: true,
+    opacity: 0.9,
+    roughness: 0.2,
+    metalness: 0.1
+});
+
+const water = new THREE.Mesh(
+    waterGeometry,
+    waterMaterial
+);
+
+water.rotation.x = -Math.PI / 2;
+water.position.y = 0;
+
+scene.add(water);
 
 const collisionMaterial = new THREE.MeshBasicMaterial({
     visible: false
@@ -95,7 +86,7 @@ const collisionBox = new THREE.Box3().setFromObject(
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
-    0.1,
+    0.5,
     1000
 );
 
@@ -130,7 +121,7 @@ const ground = new THREE.Mesh(
     groundGeometry,
     groundMaterial
 );
-
+scene.remove(ground);
 ground.rotation.x = -Math.PI / 2;
 
 scene.add(ground);
